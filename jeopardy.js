@@ -40,10 +40,6 @@ async function getCategory(id) {
         }))
     };
 }
-
-/* =========================
-   BUILD BOARD (FIXED RELIABLE VERSION)
-========================= */
 function buildBoard() {
     $("#jeopardy thead").empty();
     $("#jeopardy tbody").empty();
@@ -78,7 +74,7 @@ function buildBoard() {
 }
 
 /* =========================
-   CLICK HANDLER (FIXED)
+   CLICK HANDLER
 ========================= */
 $("#jeopardy").on("click", "div", function () {
     const el = $(this);
