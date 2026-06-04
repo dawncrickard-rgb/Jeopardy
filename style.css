@@ -1,0 +1,41 @@
+body {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    background: #060ce9;
+    color: white;
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+#jeopardy {
+    margin: auto;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    border: 2px solid white;
+    width: 150px;
+    height: 80px;
+    text-align: center;
+    background: #115ff4;
+    color: gold;
+    font-weight: bold;
+}
+
+td div {
+    cursor: pointer;
+}
+
+.viewed {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+button {
+    margin: 10px;
+    padding: 10px;
+    cursor: pointer;
+}
