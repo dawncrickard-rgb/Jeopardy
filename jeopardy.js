@@ -7,39 +7,68 @@ const NUM_CLUES = 5;
 let categories = [];
 
 /* =========================
-   LOAD CATEGORY IDS
+   GET CATEGORY IDS
 ========================= */
 async function getCategoryIds() {
-    const res = await axios.get(`${API}categories?count=100`);
+    try {
+        const res = await axios.get(`${API}categories?count=100`);
 
-    const valid = res.data.filter(
-        c => c.clues_count >= NUM_CLUES
-    );
+        const valid = res.data.filter(
+            c => c.clues_count && c.clues_count >= NUM_CLUES
+        );
 
-    return _.sampleSize(valid, NUM_CATEGORIES).map(c => c.id);
+        return _.sampleSize(valid, NUM_CATEGORIES).map(c => c.id);
+
+    } catch (err) {
+        console.error("Error fetching category IDs:", err);
+        return [];
+    }
 }
 
 /* =========================
-   LOAD CATEGORY
+   GET ONE CATEGORY
 ========================= */
 async function getCategory(id) {
-    const res = await axios.get(`${API}category?id=${id}`);
+    try {
+        const res = await axios.get(`${API}category?id=${id}`);
 
-    const validClues = res.data.clues.filter(
-        c => c.question && c.answer
-    );
+        const validClues = res.data.clues.filter(
+            c => c.question && c.answer
+        );
 
-    const clues = _.sampleSize(validClues, NUM_CLUES);
+        // SAFE FIX: avoid lodash randomness breaking layout
+        const clues = validClues.slice(0, NUM_CLUES);
 
-    return {
-        title: res.data.title,
-        clues: clues.map((c, i) => ({
-            question: c.question,
-            answer: c.answer,
-            value: (i + 1) * 200
-        }))
-    };
+        return {
+            id,
+            title: res.data.title,
+            clues: clues.map((c, i) => ({
+                question: c.question,
+                answer: c.answer,
+                value: (i + 1) * 200,
+                state: "hidden"
+            }))
+        };
+
+    } catch (err) {
+        console.error("Error fetching category:", id, err);
+
+        return {
+            id,
+            title: "Error",
+            clues: Array(NUM_CLUES).fill({
+                question: "Error",
+                answer: "Error",
+                value: 0,
+                state: "hidden"
+            })
+        };
+    }
 }
+
+/* =========================
+   BUILD BOARD
+========================= */
 function buildBoard() {
     $("#jeopardy thead").empty();
     $("#jeopardy tbody").empty();
@@ -56,7 +85,15 @@ function buildBoard() {
         const row = $("<tr>");
 
         for (let x = 0; x < NUM_CATEGORIES; x++) {
-            const clue = categories[x].clues[y];
+            const clue = categories[x]?.clues?.[y];
+
+            const td = $("<td>");
+
+            if (!clue) {
+                td.text("");
+                row.append(td);
+                continue;
+            }
 
             const cell = $("<div>")
                 .text(`$${clue.value}`)
@@ -64,8 +101,7 @@ function buildBoard() {
                 .attr("data-answer", clue.answer)
                 .attr("data-state", "hidden");
 
-            const td = $("<td>").append(cell);
-
+            td.append(cell);
             row.append(td);
         }
 
@@ -78,7 +114,6 @@ function buildBoard() {
 ========================= */
 $("#jeopardy").on("click", "div", function () {
     const el = $(this);
-
     const state = el.attr("data-state");
 
     if (state === "hidden") {
@@ -99,6 +134,13 @@ $("#jeopardy").on("click", "div", function () {
 async function startGame() {
     categories = [];
 
+    $("#jeopardy thead").empty();
+    $("#jeopardy tbody").empty();
+
+    $("#jeopardy tbody").html(
+        "<tr><td colspan='6'>Loading...</td></tr>"
+    );
+
     const ids = await getCategoryIds();
 
     for (let id of ids) {
@@ -111,5 +153,6 @@ async function startGame() {
 /* =========================
    INIT
 ========================= */
-$("#restart").on("click", startGame);
-$(document).ready(startGame);
+$(document).ready(function () {
+    $("#restart").on("click", startGame);
+});
