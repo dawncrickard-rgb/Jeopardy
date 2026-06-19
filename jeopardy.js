@@ -8,6 +8,7 @@ const questionBox = document.getElementById("question-box");
 const answerBox = document.getElementById("answer-box");
 const board = document.getElementById("jeopardy");
 const restartBtn = document.getElementById("restart");
+const music = document.getElementById("jeopardy-music");
 
 function removeHTML(html) {
     const div = document.createElement("div");
@@ -37,7 +38,7 @@ async function getCategory(id) {
     });
 
     return {
-        title: res.data.title,
+        title: removeHTML(res.data.title),
         clues: clues
     };
 }
@@ -108,7 +109,11 @@ function handleClick(event) {
 async function startGame() {
     questionBox.innerText = "Question will appear here";
     answerBox.innerText = "Answer will appear here";
-    board.innerHTML = "";
+    board.innerHTML = "Loading...";
+
+    music.play().catch(() => {
+        console.log("Music will start after user clicks the button.");
+    });
 
     await fillCategories();
     fillTable();

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Jeopardy</title>
@@ -19,14 +20,23 @@
 
   <button id="restart">Start / Restart</button>
 
-  <!-- ✅ NEW SEPARATE BOXES -->
-  <div id="question-box"></div>
-  <div id="answer-box"></div>
+  <!-- Question and Answer Boxes -->
+  <div id="qa-container">
+    <div id="question-box">Question will appear here</div>
+    <div id="answer-box">Answer will appear here</div>
+  </div>
 
+  <!-- Game Board -->
   <table id="jeopardy">
     <thead></thead>
     <tbody></tbody>
   </table>
 
+  <!-- Optional Music -->
+  <audio id="jeopardy-music" loop>
+    <source src="jeopardy-theme.mp3" type="audio/mpeg">
+  </audio>
+
 </body>
+
 </html>
