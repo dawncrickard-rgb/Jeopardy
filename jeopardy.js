@@ -1,158 +1,119 @@
-console.log("Jeopardy script loaded");
-
 const API = "https://rithm-jeopardy.herokuapp.com/api/";
 const NUM_CATEGORIES = 6;
 const NUM_CLUES = 5;
 
 let categories = [];
 
-/* =========================
-   GET CATEGORY IDS
-========================= */
+const questionBox = document.getElementById("question-box");
+const answerBox = document.getElementById("answer-box");
+const board = document.getElementById("jeopardy");
+const restartBtn = document.getElementById("restart");
+
+function removeHTML(html) {
+    const div = document.createElement("div");
+    div.innerHTML = html;
+    return div.textContent || div.innerText || "";
+}
+
 async function getCategoryIds() {
-    try {
-        const res = await axios.get(`${API}categories?count=100`);
+    const res = await axios.get(`${API}categories?count=100`);
 
-        const valid = res.data.filter(
-            c => c.clues_count && c.clues_count >= NUM_CLUES
-        );
+    const validCategories = res.data.filter(cat => cat.clues_count >= NUM_CLUES);
 
-        return _.sampleSize(valid, NUM_CATEGORIES).map(c => c.id);
-
-    } catch (err) {
-        console.error("Error fetching category IDs:", err);
-        return [];
-    }
+    return _.sampleSize(validCategories, NUM_CATEGORIES).map(cat => cat.id);
 }
 
-/* =========================
-   GET ONE CATEGORY
-========================= */
 async function getCategory(id) {
-    try {
-        const res = await axios.get(`${API}category?id=${id}`);
+    const res = await axios.get(`${API}category?id=${id}`);
 
-        const validClues = res.data.clues.filter(
-            c => c.question && c.answer
-        );
+    const validClues = res.data.clues.filter(clue => clue.question && clue.answer);
 
-        // SAFE FIX: avoid lodash randomness breaking layout
-        const clues = validClues.slice(0, NUM_CLUES);
-
+    const clues = _.sampleSize(validClues, NUM_CLUES).map(clue => {
         return {
-            id,
-            title: res.data.title,
-            clues: clues.map((c, i) => ({
-                question: c.question,
-                answer: c.answer,
-                value: (i + 1) * 200,
-                state: "hidden"
-            }))
+            question: removeHTML(clue.question),
+            answer: removeHTML(clue.answer),
+            showing: null
         };
-
-    } catch (err) {
-        console.error("Error fetching category:", id, err);
-
-        return {
-            id,
-            title: "Error",
-            clues: Array(NUM_CLUES).fill({
-                question: "Error",
-                answer: "Error",
-                value: 0,
-                state: "hidden"
-            })
-        };
-    }
-}
-
-/* =========================
-   BUILD BOARD
-========================= */
-function buildBoard() {
-    $("#jeopardy thead").empty();
-    $("#jeopardy tbody").empty();
-
-    const header = $("<tr>");
-
-    categories.forEach(cat => {
-        header.append(`<th>${cat.title}</th>`);
     });
 
-    $("#jeopardy thead").append(header);
-
-    for (let y = 0; y < NUM_CLUES; y++) {
-        const row = $("<tr>");
-
-        for (let x = 0; x < NUM_CATEGORIES; x++) {
-            const clue = categories[x]?.clues?.[y];
-
-            const td = $("<td>");
-
-            if (!clue) {
-                td.text("");
-                row.append(td);
-                continue;
-            }
-
-            const cell = $("<div>")
-                .text(`$${clue.value}`)
-                .attr("data-question", clue.question)
-                .attr("data-answer", clue.answer)
-                .attr("data-state", "hidden");
-
-            td.append(cell);
-            row.append(td);
-        }
-
-        $("#jeopardy tbody").append(row);
-    }
+    return {
+        title: res.data.title,
+        clues: clues
+    };
 }
 
-/* =========================
-   CLICK HANDLER
-========================= */
-$("#jeopardy").on("click", "div", function () {
-    const el = $(this);
-    const state = el.attr("data-state");
+async function fillCategories() {
+    const categoryIds = await getCategoryIds();
 
-    if (state === "hidden") {
-        el.text(el.attr("data-question"));
-        el.attr("data-state", "question");
-    }
-
-    else if (state === "question") {
-        el.text(el.attr("data-answer"));
-        el.attr("data-state", "answer");
-        el.addClass("viewed");
-    }
-});
-
-/* =========================
-   START GAME
-========================= */
-async function startGame() {
     categories = [];
 
-    $("#jeopardy thead").empty();
-    $("#jeopardy tbody").empty();
-
-    $("#jeopardy tbody").html(
-        "<tr><td colspan='6'>Loading...</td></tr>"
-    );
-
-    const ids = await getCategoryIds();
-
-    for (let id of ids) {
-        categories.push(await getCategory(id));
+    for (let id of categoryIds) {
+        const category = await getCategory(id);
+        categories.push(category);
     }
-
-    buildBoard();
 }
 
-/* =========================
-   INIT
-========================= */
-$(document).ready(function () {
-    $("#restart").on("click", startGame);
-});
+function fillTable() {
+    board.innerHTML = "";
+
+    const headerRow = document.createElement("tr");
+
+    for (let category of categories) {
+        const th = document.createElement("th");
+        th.innerText = category.title;
+        headerRow.appendChild(th);
+    }
+
+    board.appendChild(headerRow);
+
+    for (let clueIndex = 0; clueIndex < NUM_CLUES; clueIndex++) {
+        const row = document.createElement("tr");
+
+        for (let categoryIndex = 0; categoryIndex < NUM_CATEGORIES; categoryIndex++) {
+            const td = document.createElement("td");
+
+            td.innerText = `$${(clueIndex + 1) * 200}`;
+            td.dataset.category = categoryIndex;
+            td.dataset.clue = clueIndex;
+
+            td.addEventListener("click", handleClick);
+
+            row.appendChild(td);
+        }
+
+        board.appendChild(row);
+    }
+}
+
+function handleClick(event) {
+    const cell = event.target;
+
+    const categoryIndex = cell.dataset.category;
+    const clueIndex = cell.dataset.clue;
+
+    const clue = categories[categoryIndex].clues[clueIndex];
+
+    if (clue.showing === null) {
+        cell.innerText = "?";
+        questionBox.innerText = clue.question;
+        answerBox.innerText = "";
+        clue.showing = "question";
+    } else if (clue.showing === "question") {
+        cell.innerText = "✓";
+        answerBox.innerText = clue.answer;
+        clue.showing = "answer";
+    }
+}
+
+async function startGame() {
+    questionBox.innerText = "Question will appear here";
+    answerBox.innerText = "Answer will appear here";
+    board.innerHTML = "";
+
+    await fillCategories();
+    fillTable();
+}
+
+restartBtn.addEventListener("click", startGame);
+
+startGame();

@@ -1,41 +1,119 @@
+/* Page Layout */
+html,
 body {
-    text-align: center;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+
     font-family: Arial, sans-serif;
-    background: #060ce9;
-    color: white;
+    text-align: center;
+
+    background: linear-gradient(135deg,
+            #1f2a7c,
+            #6a1b4d,
+            #c62828,
+            #f9a825);
 }
 
+/* Title */
 h1 {
-    margin-bottom: 10px;
+    color: white;
+    font-size: 3rem;
+    margin: 10px 0;
 }
 
+/* Restart Button */
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+/* Question Box */
+#question-box {
+    width: 80%;
+    height: 80px;
+
+    margin: 5px auto;
+    padding: 10px;
+
+    border: 3px solid yellow;
+    border-radius: 10px;
+
+    background: rgba(0, 0, 0, 0.85);
+
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+/* Answer Box */
+#answer-box {
+    width: 80%;
+    height: 80px;
+
+    margin: 5px auto 10px auto;
+    padding: 10px;
+
+    border: 3px solid lime;
+    border-radius: 10px;
+
+    background: rgba(0, 0, 0, 0.85);
+
+    color: lime;
+    font-size: 32px;
+    font-weight: bold;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+/* Board */
 #jeopardy {
-    margin: auto;
+    width: 1100px;
+    margin: 0 auto;
     border-collapse: collapse;
 }
 
-th,
-td {
+/* Category Headers */
+#jeopardy th {
+    background: gold;
+    color: black;
+
+    height: 60px;
+    width: 180px;
+
+    font-size: 22px;
+    padding: 5px;
+
     border: 2px solid white;
-    width: 150px;
-    height: 80px;
-    text-align: center;
-    background: #115ff4;
-    color: gold;
+}
+
+/* Clue Cells */
+#jeopardy td {
+    background: #2e86de;
+    color: white;
+
+    height: 55px;
+    width: 180px;
+
+    font-size: 24px;
     font-weight: bold;
-}
 
-td div {
+    border: 2px solid white;
     cursor: pointer;
 }
 
-.viewed {
-    opacity: 0.5;
-    text-decoration: line-through;
-}
-
-button {
-    margin: 10px;
-    padding: 10px;
-    cursor: pointer;
+/* Hover Effect */
+#jeopardy td:hover {
+    background: #54a0ff;
 }
